@@ -2,7 +2,7 @@ import os
 import sys
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import AsyncOpenAI, OpenAI
 
 load_dotenv()
 
@@ -24,3 +24,4 @@ if not _api_key or _api_key.strip() == "":
     sys.exit(1)
 
 client = OpenAI(api_key=_api_key)
+aclient = AsyncOpenAI(api_key=_api_key)

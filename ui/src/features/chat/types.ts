@@ -6,11 +6,19 @@ export type Source = {
   score: number;
 };
 
+export type Usage = {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+};
+
 export type Message = {
   id: string;
   role: MessageRole;
   content: string;
   sources?: Source[];
+  tool_calls?: { name: string; args: Record<string, any> }[];
+  usage?: Usage;
   created_at: string;
 };
 
@@ -31,8 +39,10 @@ export type CreateConversationPayload = {
 };
 
 export type StreamEvents = {
+  tool_call: { name: string; args: Record<string, any> };
   token: string;
   sources: Source[];
+  usage: Usage;
   done: Message;
   error: string;
 };

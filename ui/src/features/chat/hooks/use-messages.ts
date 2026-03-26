@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { chatApi } from "../api";
-import type { Message, Source } from "../types";
+import type { Message, Source, Usage } from "../types";
 
 const messagesKey = (conversationId: string) =>
   ["conversations", conversationId, "messages"] as const;
@@ -18,6 +18,9 @@ export type StreamingState = {
   isStreaming: boolean;
   streamingContent: string;
   streamingSources: Source[];
+  activeTool?: { name: string; args: Record<string, any> };
+  streamingToolCalls: { name: string; args: Record<string, any> }[];
+  streamingUsage?: Usage;
 };
 
 export function useStreamMessage() {
@@ -28,6 +31,8 @@ export function useStreamMessage() {
     isStreaming: false,
     streamingContent: "",
     streamingSources: [],
+    streamingToolCalls: [],
+    streamingUsage: undefined,
   });
 
   const send = useCallback(
@@ -54,6 +59,9 @@ export function useStreamMessage() {
         isStreaming: true,
         streamingContent: "",
         streamingSources: [],
+        activeTool: undefined,
+        streamingToolCalls: [],
+        streamingUsage: undefined,
       });
 
       let accumulated = "";
@@ -63,17 +71,44 @@ export function useStreamMessage() {
         content,
         {
           token: (char) => {
+            console.log("SSE token:", char);
             accumulated += char;
             setStreamingState((prev) => ({
               ...prev,
               streamingContent: accumulated,
+              activeTool: undefined,
             }));
           },
           sources: (sources) => {
+            console.log("SSE sources:", sources);
             setStreamingState((prev) => ({
               ...prev,
               streamingSources: sources,
             }));
+          },
+          usage: (usage) => {
+            console.log("SSE usage:", usage);
+            setStreamingState((prev) => ({
+              ...prev,
+              streamingUsage: usage,
+            }));
+          },
+          tool_call: (toolCall) => {
+            console.log("SSE tool_call:", toolCall);
+            setStreamingState((prev) => ({
+              ...prev,
+              activeTool: toolCall,
+              streamingToolCalls: [...prev.streamingToolCalls, toolCall],
+            }));
+          },
+          error: (errorMessage) => {
+            console.error("Backend error:", errorMessage);
+            setStreamingState((prev) => ({
+              ...prev,
+              isStreaming: false,
+              activeTool: undefined,
+            }));
+            // Optionally handle this better (e.g. show toast)
           },
           done: (finalMessage) => {
             queryClient.setQueryData<Message[]>(key, (old) => {
@@ -86,6 +121,9 @@ export function useStreamMessage() {
               isStreaming: false,
               streamingContent: "",
               streamingSources: [],
+              activeTool: undefined,
+              streamingToolCalls: [],
+              streamingUsage: undefined,
             });
             queryClient.invalidateQueries({ queryKey: ["conversations"] });
           },
@@ -95,6 +133,8 @@ export function useStreamMessage() {
               isStreaming: false,
               streamingContent: "",
               streamingSources: [],
+              streamingToolCalls: [],
+              streamingUsage: undefined,
             });
           },
         },
@@ -110,6 +150,8 @@ export function useStreamMessage() {
       isStreaming: false,
       streamingContent: "",
       streamingSources: [],
+      streamingToolCalls: [],
+      streamingUsage: undefined,
     });
   }, []);
 

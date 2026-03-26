@@ -54,12 +54,16 @@ class Store:
         role: str,
         content: str,
         sources: list[Source] | None = None,
+        tool_calls: list | None = None,
+        usage: dict | None = None,
     ) -> MessageResponse:
         message = MessageResponse(
             id=str(uuid.uuid4()),
             role=role,
             content=content,
             sources=sources or [],
+            tool_calls=tool_calls or [],
+            usage=usage,
             created_at=datetime.now(timezone.utc),
         )
         self._messages.setdefault(conversation_id, []).append(message)

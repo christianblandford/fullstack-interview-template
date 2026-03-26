@@ -11,7 +11,7 @@ export function ChatLayout() {
     string | null
   >(null);
 
-  const { send, isStreaming, streamingContent, streamingSources } =
+  const { send, isStreaming, streamingContent, streamingSources, streamingToolCalls, activeTool, streamingUsage } =
     useStreamMessage();
   const createConversation = useCreateConversation();
 
@@ -39,7 +39,7 @@ export function ChatLayout() {
         <div className="flex h-svh flex-col">
           <MessageList
             conversationId={activeConversationId}
-            streaming={{ isStreaming, streamingContent, streamingSources }}
+            streaming={{ isStreaming, streamingContent, streamingSources, streamingToolCalls, activeTool, streamingUsage }}
           />
           <MessageInput
             onSend={handleSend}
